@@ -1,0 +1,14 @@
+services:
+  nginx:
+    volumes:
+      - ./project/:/var/www/
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+
+  db:
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/init.d/:/var/lib/mysql/init.d/
+
+  php:
+    volumes:
+      - ./project/:/var/www/

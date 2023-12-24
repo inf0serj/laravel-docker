@@ -1,0 +1,22 @@
+services:
+  nginx:
+    build:
+      context: nginx
+    ports:
+      - 80:80
+    depends_on:
+      - php
+
+  db:
+    image: mysql:5.7
+    expose:
+      - 3306
+
+  php:
+    build:
+      context: php-fpm
+    expose:
+      - 9000
+    depends_on:
+      - db
+    restart: unless-stopped
