@@ -4,19 +4,60 @@ services:
       context: nginx
     ports:
       - 80:80
+    networks:
+      - default
     depends_on:
       - php
 
   db:
-    image: mysql:5.7
+    image: 'mysql/mysql-server:8.0'
     expose:
-      - 3306
+      - '3306'
+    volumes:
+      - 'mysql-data:/var/lib/mysql'
+    networks:
+      - default
 
   php:
-    build:
-      context: php-fpm
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     expose:
-      - 9000
+      - 80
+    ports:
+      - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+    environment:
+      WWWUSER: '${WWWUSER}'
+      LARAVEL_SAIL: 1
+      XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+      XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+      IGNITION_LOCAL_SITES_PATH: '${PWD}'
+    networks:
+      - default
     depends_on:
       - db
-    restart: unless-stopped
+      - redis
+
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    volumes:
+      - 'redis-data:/data'
+    networks:
+      - default
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      retries: 3
+      timeout: 5s
+
+networks:
+  default:
+    driver: bridge
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
