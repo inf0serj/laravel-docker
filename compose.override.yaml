@@ -1,20 +1,15 @@
 services:
   nginx:
+    ports:
+      - 80:80
     volumes:
       - ./project:/var/www/html
       - ./nginx/conf.d:/etc/nginx/conf.d
 
+  php:
+    volumes:
+      - ./project:/var/www/html
+
   db:
     ports:
       - 3306:3306
-    volumes:
-      - ./mysql/init.d/:/var/lib/mysql/init.d/
-
-  php:
-    build:
-      context: ./project/vendor/laravel/sail/runtimes/8.2
-      dockerfile: Dockerfile
-      args:
-        WWWGROUP: '${WWWGROUP}'
-    volumes:
-      - ./project:/var/www/html

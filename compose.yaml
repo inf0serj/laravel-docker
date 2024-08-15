@@ -1,9 +1,20 @@
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
+
 services:
   nginx:
     build:
       context: nginx
-    ports:
-      - 80:80
+    volumes:
+      - ./project:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
     networks:
       - default
     depends_on:
@@ -14,17 +25,22 @@ services:
     expose:
       - '3306'
     volumes:
-      - 'mysql-data:/var/lib/mysql'
+      - mysql-data:/var/lib/mysql
     networks:
       - default
 
   php:
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
+    build:
+      context: ./project/vendor/laravel/sail/runtimes/8.2
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: '${WWWGROUP}'
     expose:
       - 80
     ports:
       - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     environment:
       WWWUSER: '${WWWUSER}'
       LARAVEL_SAIL: 1
@@ -42,7 +58,7 @@ services:
     ports:
       - '${FORWARD_REDIS_PORT:-6379}:6379'
     volumes:
-      - 'redis-data:/data'
+      - redis-data:/data
     networks:
       - default
     healthcheck:
@@ -52,12 +68,3 @@ services:
         - ping
       retries: 3
       timeout: 5s
-
-networks:
-  default:
-    driver: bridge
-volumes:
-  mysql-data:
-    driver: local
-  redis-data:
-    driver: local
